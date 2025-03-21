@@ -15,10 +15,15 @@ import java.util.List;
 public class User implements UserDetails {
     @Id
     private String id;
-    private String username;
     private String email;
     private String password;
-    private String role;
+    private String username;
+    private String role;  // "TUTOR" or "STUDENT"
+    private String fullname;
+    private String phone;
+    private String address;
+    private String avatar;
+    private String bio;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

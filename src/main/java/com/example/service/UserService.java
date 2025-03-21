@@ -3,6 +3,7 @@ package com.example.service;
 import com.example.dto.AuthResponse;
 import com.example.dto.LoginRequest;
 import com.example.dto.SignupRequest;
+import com.example.dto.UpdateProfileRequest;
 import com.example.model.User;
 import com.example.repository.UserRepository;
 import com.example.security.JwtUtil;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,7 +38,7 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole("USER");
+        user.setRole(request.getRole());
 
         userRepository.save(user);
 
@@ -56,5 +58,41 @@ public class UserService {
 
         String token = jwtUtil.generateToken(user);
         return new AuthResponse(token, user.getUsername());
+    }
+
+    public User updateProfile(String username, UpdateProfileRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email is already in use");
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getFullname() != null) {
+            user.setFullname(request.getFullname());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getAvatar() != null) {
+            user.setAvatar(request.getAvatar());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+
+        return userRepository.save(user);
+    }
+
+    public User getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 } 
