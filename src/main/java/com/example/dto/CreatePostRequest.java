@@ -2,6 +2,7 @@ package com.example.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 @Data
@@ -22,4 +23,13 @@ public class CreatePostRequest {
 
     @NotBlank(message = "Schedule is required")
     private String schedule;
+
+    private boolean visibility;
+
+    @Min(value = 1, message = "Maximum students must be at least 1")
+    private int maxStudent;
+
+    public boolean getVisibility() {
+        return visibility;
+    }
 } 

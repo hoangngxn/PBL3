@@ -20,6 +20,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final PostRepository postRepository;
     private final UserService userService;
+    private final PostService postService;
 
     public Booking createBooking(CreateBookingRequest request) {
         User currentUser = userService.getCurrentUser();
@@ -70,7 +71,19 @@ public class BookingService {
             throw new RuntimeException("Only the tutor of this booking can update its status");
         }
 
+        // Get the old status before updating
+        Booking.BookingStatus oldStatus = booking.getStatus();
+        
+        // Update the booking status
         booking.setStatus(status);
-        return bookingRepository.save(booking);
+        Booking updatedBooking = bookingRepository.save(booking);
+
+        // If status changed to/from CONFIRMED, update the post's approved student count
+        if (oldStatus != status && 
+            (oldStatus == Booking.BookingStatus.CONFIRMED || status == Booking.BookingStatus.CONFIRMED)) {
+            postService.updateApprovedStudentCount(booking.getPostId());
+        }
+
+        return updatedBooking;
     }
 } 

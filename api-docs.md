@@ -1,4 +1,4 @@
- # API Documentation
+# API Documentation
 
 ## Authentication Endpoints
 
@@ -102,12 +102,15 @@
     "description": "string",   // max 1000 characters
     "subject": "string",
     "location": "string",
-    "schedule": "string"
+    "schedule": "string",
+    "visibility": "boolean",   // true for public, false for private
+    "maxStudent": "number"     // minimum 1
 }
 ```
 - **Response (200 OK)**: Created post object
 - **Error Responses**:
   - `403 Forbidden`: If user is not a tutor
+  - `400 Bad Request`: If maxStudent is less than 1
 
 ### Get All Posts
 - **Route**: `GET /api/posts`
@@ -124,7 +127,10 @@
         "subject": "string",
         "location": "string",
         "schedule": "string",
-        "createdAt": "string"
+        "createdAt": "string",
+        "visibility": "boolean",
+        "approvedStudent": "number",  // count of confirmed bookings
+        "maxStudent": "number"        // maximum number of students allowed
     }
 ]
 ```

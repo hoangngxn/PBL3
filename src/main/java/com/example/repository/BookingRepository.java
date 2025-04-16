@@ -8,4 +8,5 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     List<Booking> findByStudentId(String studentId);
     List<Booking> findByTutorId(String tutorId);
     List<Booking> findByPostId(String postId);
+    long countByPostIdAndStatus(String postId, Booking.BookingStatus status);
 } 

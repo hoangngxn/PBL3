@@ -10,11 +10,14 @@ import java.time.LocalDateTime;
 public class Post {
     @Id
     private String id;
-    private String userId;  // Reference to tutor's user ID
+    private String userId;
     private String title;
     private String description;
     private String subject;
     private String location;
     private String schedule;
     private LocalDateTime createdAt;
+    private boolean visibility;
+    private int approvedStudent;
+    private int maxStudent;
 } 
