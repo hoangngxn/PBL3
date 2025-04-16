@@ -212,6 +212,86 @@
   - `403 Forbidden`: If user is not the tutor of this booking
   - `404 Not Found`: If booking doesn't exist
 
+## Reviews Endpoints
+
+### Create Review
+- **Route**: `POST /api/reviews`
+- **Access**: Authenticated students only
+- **Description**: Create a review for a completed booking
+- **Headers**: 
+  - `Authorization: Bearer <jwt_token>`
+- **Request Body**:
+```json
+{
+    "bookingId": "string",
+    "rating": "number",      // float between 1.0 and 5.0
+    "comment": "string"      // max 500 characters
+}
+```
+- **Response (200 OK)**:
+```json
+{
+    "id": "string",
+    "bookingId": "string",
+    "rating": "number",
+    "comment": "string",
+    "createdAt": "string"
+}
+```
+- **Error Responses**:
+  - `403 Forbidden`: If user is not a student
+  - `403 Forbidden`: If user is not the student of this booking
+  - `400 Bad Request`: If booking is not in COMPLETED status
+  - `400 Bad Request`: If review already exists for this booking
+  - `404 Not Found`: If booking doesn't exist
+
+### Get Reviews by Tutor
+- **Route**: `GET /api/reviews/tutor/{tutorId}`
+- **Access**: Public
+- **Description**: Get all reviews for a specific tutor
+- **Response (200 OK)**:
+```json
+[
+    {
+        "id": "string",
+        "bookingId": "string",
+        "rating": "number",
+        "comment": "string",
+        "createdAt": "string",
+        "student": {
+            "id": "string",
+            "username": "string",
+            "avatar": "string"
+        }
+    }
+]
+```
+
+### Get Reviews by Booking
+- **Route**: `GET /api/reviews/booking/{bookingId}`
+- **Access**: Authenticated users
+- **Description**: Get review for a specific booking
+- **Headers**: 
+  - `Authorization: Bearer <jwt_token>`
+- **Response (200 OK)**:
+```json
+{
+    "id": "string",
+    "bookingId": "string",
+    "rating": "number",
+    "comment": "string",
+    "createdAt": "string",
+    "student": {
+        "id": "string",
+        "username": "string",
+        "avatar": "string"
+    }
+}
+```
+- **Error Responses**:
+  - `403 Forbidden`: If user is not associated with this booking
+  - `404 Not Found`: If review or booking doesn't exist
+
 ## General Information
 
 ### Authentication
