@@ -64,7 +64,8 @@
     "phone": "string",
     "address": "string",
     "avatar": "string",
-    "bio": "string"
+    "bio": "string",
+    "createdAt": "string"
 }
 ```
 
@@ -102,7 +103,8 @@
     "phone": "string",
     "address": "string",
     "avatar": "string",
-    "bio": "string"
+    "bio": "string",
+    "createdAt": "string"
 }
 ```
 - **Error Responses**:
@@ -386,12 +388,38 @@
         "phone": "string",
         "address": "string",
         "avatar": "string",
-        "bio": "string"
+        "bio": "string",
+        "createdAt": "string"
     }
 ]
 ```
 - **Error Responses**:
   - `403 Forbidden`: If user is not an admin
+
+### Get User by ID (Admin)
+- **Route**: `GET /api/admin/users/{userId}`
+- **Access**: Authenticated admin users only
+- **Description**: Get a specific user by ID with admin privileges
+- **Headers**: 
+  - `Authorization: Bearer <jwt_token>`
+- **Response (200 OK)**:
+```json
+{
+    "id": "string",
+    "username": "string",
+    "email": "string",
+    "role": "string",
+    "fullname": "string",
+    "phone": "string",
+    "address": "string",
+    "avatar": "string",
+    "bio": "string",
+    "createdAt": "string"  // ISO-8601 format
+}
+```
+- **Error Responses**:
+  - `403 Forbidden`: If user is not an admin
+  - `404 Not Found`: If user with the specified ID doesn't exist
 
 ### Delete User
 - **Route**: `DELETE /api/admin/users/{userId}`
@@ -402,7 +430,6 @@
 - **Response (200 OK)**: Empty response
 - **Error Responses**:
   - `403 Forbidden`: If user is not an admin
-  - `404 Not Found`: If user with the specified ID doesn't exist
 
 ### Get All Posts (Admin)
 - **Route**: `GET /api/admin/posts`
@@ -447,7 +474,6 @@
 - **Response (200 OK)**: Empty response
 - **Error Responses**:
   - `403 Forbidden`: If user is not an admin
-  - `404 Not Found`: If post doesn't exist
 
 ### Get Admin Dashboard Statistics
 - **Route**: `GET /api/admin/stats`
@@ -466,6 +492,33 @@
 ```
 - **Error Responses**:
   - `403 Forbidden`: If user is not an admin
+
+### Get User Bookings (Admin)
+- **Route**: `GET /api/admin/bookings`
+- **Access**: Authenticated admin users only
+- **Description**: Get all bookings for a specific user (as either student or tutor)
+- **Headers**: 
+  - `Authorization: Bearer <jwt_token>`
+- **Query Parameters**:
+  - `userId`: Required, the ID of the user whose bookings to retrieve
+- **Response (200 OK)**:
+```json
+[
+    {
+        "id": "string",
+        "studentId": "string",
+        "tutorId": "string",
+        "postId": "string",
+        "subject": "string",
+        "schedule": "string",
+        "status": "string", // "PENDING", "CONFIRMED", "CANCELED", or "COMPLETED"
+        "createdAt": "string"
+    }
+]
+```
+- **Error Responses**:
+  - `403 Forbidden`: If user is not an admin
+  - `404 Not Found`: If user with the specified ID doesn't exist
 
 ## General Information
 

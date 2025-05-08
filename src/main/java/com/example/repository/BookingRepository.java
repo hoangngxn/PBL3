@@ -9,4 +9,7 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     List<Booking> findByTutorId(String tutorId);
     List<Booking> findByPostId(String postId);
     long countByPostIdAndStatus(String postId, Booking.BookingStatus status);
+    
+    // Find bookings where user is either student or tutor
+    List<Booking> findByStudentIdOrTutorId(String studentId, String tutorId);
 } 

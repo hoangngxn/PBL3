@@ -1,8 +1,10 @@
 package com.example.controller;
 
 import com.example.dto.UpdatePostRequest;
+import com.example.model.Booking;
 import com.example.model.Post;
 import com.example.model.User;
+import com.example.service.BookingService;
 import com.example.service.PostService;
 import com.example.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class AdminController {
     
     private final UserService userService;
     private final PostService postService;
+    private final BookingService bookingService;
     
     private void verifyAdmin() {
         User currentUser = userService.getCurrentUser();
@@ -46,6 +49,18 @@ public class AdminController {
         users.forEach(user -> user.setPassword(null));
         
         return ResponseEntity.ok(users);
+    }
+    
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<User> getUserById(@PathVariable String userId) {
+        verifyAdmin();
+        
+        User user = userService.getUserById(userId);
+        
+        // Remove sensitive information
+        user.setPassword(null);
+        
+        return ResponseEntity.ok(user);
     }
     
     @DeleteMapping("/users/{userId}")
@@ -97,5 +112,11 @@ public class AdminController {
         stats.put("activePosts", activePosts);
         
         return ResponseEntity.ok(stats);
+    }
+    
+    @GetMapping("/bookings")
+    public ResponseEntity<List<Booking>> getBookingsByUserId(@RequestParam String userId) {
+        verifyAdmin();
+        return ResponseEntity.ok(bookingService.getBookingsByUserId(userId));
     }
 } 

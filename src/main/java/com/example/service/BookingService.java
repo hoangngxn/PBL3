@@ -86,4 +86,16 @@ public class BookingService {
 
         return updatedBooking;
     }
+
+    /**
+     * Get all bookings associated with a specific user (as either student or tutor)
+     * This method is for admin use only
+     */
+    public List<Booking> getBookingsByUserId(String userId) {
+        // Find user to ensure it exists
+        userService.getUserById(userId);
+        
+        // Return bookings where the user is either a student or tutor
+        return bookingRepository.findByStudentIdOrTutorId(userId, userId);
+    }
 } 
