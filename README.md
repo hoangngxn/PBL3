@@ -1,14 +1,6 @@
 # Tutoring Platform API
 
-A Spring Boot application that provides APIs for a tutoring platform where tutors can post their services and students can book sessions.
-
-## Features
-
-- User authentication (JWT-based)
-- Role-based access control (Student/Tutor)
-- Post management for tutors
-- Booking system for students
-- MongoDB for data persistence
+A Spring Boot application that provides APIs for a tutoring platform.
 
 ## Prerequisites
 
@@ -81,12 +73,4 @@ Refer to [api-docs.md](api-docs.md) for detailed API documentation.
 - Passwords are encrypted using BCrypt
 - CORS is configured to allow specified origins
 - Role-based access control for different endpoints
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
 
