@@ -18,6 +18,8 @@ public class UpdatePostRequest {
     
     private String schedule;
     
+    private String grade;
+    
     private Boolean visibility;
 
     @Min(value = 1, message = "Maximum students must be at least 1")

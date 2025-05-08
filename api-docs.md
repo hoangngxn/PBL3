@@ -12,7 +12,7 @@
     "username": "string",     // 3-20 characters
     "email": "string",       // valid email format
     "password": "string",    // 6-40 characters
-    "role": "string"        // must be either "STUDENT" or "TUTOR"
+    "role": "string"        // must be either "STUDENT", "TUTOR", or "ADMIN"
 }
 ```
 - **Response (200 OK)**:
@@ -124,6 +124,7 @@
     "subject": "string",
     "location": "string",
     "schedule": "string",
+    "grade": "string",        // education grade level
     "visibility": "boolean",   // true for public, false for private
     "maxStudent": "number"     // minimum 1
 }
@@ -148,6 +149,7 @@
         "subject": "string",
         "location": "string",
         "schedule": "string",
+        "grade": "string",
         "createdAt": "string",
         "visibility": "boolean",
         "approvedStudent": "number",  // count of confirmed bookings
@@ -176,6 +178,7 @@
     "subject": "string",
     "location": "string",
     "schedule": "string",
+    "grade": "string",
     "createdAt": "string",
     "visibility": "boolean",
     "approvedStudent": "number",
@@ -199,6 +202,7 @@
     "subject": "string",       // optional
     "location": "string",      // optional
     "schedule": "string",      // optional
+    "grade": "string",         // optional, education grade level
     "visibility": "boolean",   // optional, true for public, false for private
     "maxStudent": "number"     // optional, minimum 1
 }
@@ -359,6 +363,44 @@
 - **Error Responses**:
   - `403 Forbidden`: If user is not associated with this booking
   - `404 Not Found`: If review or booking doesn't exist
+
+## Admin Endpoints
+
+### Get All Users
+- **Route**: `GET /api/admin/users`
+- **Access**: Authenticated admin users only
+- **Description**: Get a list of all users in the system
+- **Headers**: 
+  - `Authorization: Bearer <jwt_token>`
+- **Response (200 OK)**:
+```json
+[
+    {
+        "id": "string",
+        "username": "string",
+        "email": "string",
+        "role": "string",
+        "fullname": "string",
+        "phone": "string",
+        "address": "string",
+        "avatar": "string",
+        "bio": "string"
+    }
+]
+```
+- **Error Responses**:
+  - `403 Forbidden`: If user is not an admin
+
+### Delete User
+- **Route**: `DELETE /api/admin/users/{userId}`
+- **Access**: Authenticated admin users only
+- **Description**: Delete a user from the system
+- **Headers**: 
+  - `Authorization: Bearer <jwt_token>`
+- **Response (200 OK)**: Empty response
+- **Error Responses**:
+  - `403 Forbidden`: If user is not an admin
+  - `404 Not Found`: If user with the specified ID doesn't exist
 
 ## General Information
 

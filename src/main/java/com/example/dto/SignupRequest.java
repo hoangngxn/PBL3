@@ -21,6 +21,6 @@ public class SignupRequest {
     private String password;
 
     @NotBlank(message = "Role is required")
-    @Pattern(regexp = "^(TUTOR|STUDENT)$", message = "Role must be either TUTOR or STUDENT")
+    @Pattern(regexp = "^(TUTOR|STUDENT|ADMIN)$", message = "Role must be either TUTOR, STUDENT, or ADMIN")
     private String role;
 } 

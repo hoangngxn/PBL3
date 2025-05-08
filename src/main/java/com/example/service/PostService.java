@@ -32,6 +32,7 @@ public class PostService {
         post.setSubject(request.getSubject());
         post.setLocation(request.getLocation());
         post.setSchedule(request.getSchedule());
+        post.setGrade(request.getGrade());
         post.setCreatedAt(LocalDateTime.now());
         post.setVisibility(request.getVisibility());
         post.setApprovedStudent(0); // Initialize with 0 approved students
@@ -78,6 +79,9 @@ public class PostService {
         }
         if (request.getSchedule() != null) {
             post.setSchedule(request.getSchedule());
+        }
+        if (request.getGrade() != null) {
+            post.setGrade(request.getGrade());
         }
         if (request.getVisibility() != null) {
             post.setVisibility(request.getVisibility());

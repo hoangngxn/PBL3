@@ -26,6 +26,9 @@ public class CreatePostRequest {
 
     private boolean visibility;
 
+    @NotBlank(message = "Grade is required")
+    private String grade;
+
     @Min(value = 1, message = "Maximum students must be at least 1")
     private int maxStudent;
 

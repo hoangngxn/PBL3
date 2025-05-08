@@ -18,7 +18,7 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private String username;
-    private String role;  // "TUTOR" or "STUDENT"
+    private String role;  // "TUTOR", "STUDENT", or "ADMIN"
     private String fullname;
     private String phone;
     private String address;

@@ -16,6 +16,7 @@ public class Post {
     private String subject;
     private String location;
     private String schedule;
+    private String grade;
     private LocalDateTime createdAt;
     private boolean visibility;
     private int approvedStudent;
