@@ -1,10 +1,13 @@
 package com.example.service;
 
 import com.example.dto.CreateReviewRequest;
+import com.example.dto.ReviewResponseDTO;
 import com.example.model.Booking;
+import com.example.model.Post;
 import com.example.model.Review;
 import com.example.model.User;
 import com.example.repository.BookingRepository;
+import com.example.repository.PostRepository;
 import com.example.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ import java.util.List;
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final BookingRepository bookingRepository;
+    private final PostRepository postRepository;
     private final UserService userService;
 
     public Review createReview(CreateReviewRequest request) {
@@ -61,12 +66,22 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-    public List<Review> getReviewsByTutor(String tutorId) {
+    /**
+     * Get reviews for a tutor with post titles included
+     */
+    public List<ReviewResponseDTO> getReviewsByTutor(String tutorId) {
         log.info("Getting reviews for tutor: {}", tutorId);
-        return reviewRepository.findByTutorId(tutorId);
+        List<Review> reviews = reviewRepository.findByTutorId(tutorId);
+        
+        return reviews.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    public Review getReviewByBooking(String bookingId) {
+    /**
+     * Get review for a booking with post title included
+     */
+    public ReviewResponseDTO getReviewByBooking(String bookingId) {
         User currentUser = userService.getCurrentUser();
         log.info("Getting review for booking: {}", bookingId);
         
@@ -79,8 +94,53 @@ public class ReviewService {
             throw new RuntimeException("You are not associated with this booking");
         }
 
-        // Find and return the review
-        return reviewRepository.findByBookingId(bookingId)
+        // Find the review
+        Review review = reviewRepository.findByBookingId(bookingId)
                 .orElseThrow(() -> new RuntimeException("Review not found for this booking"));
+                
+        return mapToResponseDTO(review);
+    }
+    
+    /**
+     * Maps a Review entity to a ReviewResponseDTO with additional information
+     */
+    private ReviewResponseDTO mapToResponseDTO(Review review) {
+        ReviewResponseDTO dto = new ReviewResponseDTO();
+        
+        // Copy basic properties
+        dto.setId(review.getId());
+        dto.setBookingId(review.getBookingId());
+        dto.setStudentId(review.getStudentId());
+        dto.setTutorId(review.getTutorId());
+        dto.setRating(review.getRating());
+        dto.setComment(review.getComment());
+        dto.setCreatedAt(review.getCreatedAt());
+        
+        // Get booking to find postId
+        Booking booking = bookingRepository.findById(review.getBookingId())
+                .orElse(null);
+        
+        if (booking != null) {
+            // Get post to get title
+            Post post = postRepository.findById(booking.getPostId())
+                    .orElse(null);
+            
+            if (post != null) {
+                dto.setPostTitle(post.getTitle());
+            }
+        }
+        
+        // Get student information
+        User student = userService.getUserById(review.getStudentId());
+        if (student != null) {
+            ReviewResponseDTO.UserInfoDTO studentInfo = new ReviewResponseDTO.UserInfoDTO();
+            studentInfo.setId(student.getId());
+            studentInfo.setUsername(student.getUsername());
+            studentInfo.setFullname(student.getFullname());
+            studentInfo.setAvatar(student.getAvatar());
+            dto.setStudent(studentInfo);
+        }
+        
+        return dto;
     }
 } 

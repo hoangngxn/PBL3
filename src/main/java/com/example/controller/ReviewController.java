@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.dto.CreateReviewRequest;
+import com.example.dto.ReviewResponseDTO;
 import com.example.model.Review;
 import com.example.service.ReviewService;
 import jakarta.validation.Valid;
@@ -22,12 +23,12 @@ public class ReviewController {
     }
 
     @GetMapping("/tutor/{tutorId}")
-    public ResponseEntity<List<Review>> getReviewsByTutor(@PathVariable String tutorId) {
+    public ResponseEntity<List<ReviewResponseDTO>> getReviewsByTutor(@PathVariable String tutorId) {
         return ResponseEntity.ok(reviewService.getReviewsByTutor(tutorId));
     }
 
     @GetMapping("/booking/{bookingId}")
-    public ResponseEntity<Review> getReviewByBooking(@PathVariable String bookingId) {
+    public ResponseEntity<ReviewResponseDTO> getReviewByBooking(@PathVariable String bookingId) {
         return ResponseEntity.ok(reviewService.getReviewByBooking(bookingId));
     }
 } 
