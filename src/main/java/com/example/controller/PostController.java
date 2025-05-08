@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.dto.CreatePostRequest;
+import com.example.dto.UpdatePostRequest;
 import com.example.model.Post;
 import com.example.service.PostService;
 import jakarta.validation.Valid;
@@ -29,5 +30,17 @@ public class PostController {
     @GetMapping("/tutor/{tutorId}")
     public ResponseEntity<List<Post>> getPostsByTutor(@PathVariable String tutorId) {
         return ResponseEntity.ok(postService.getPostsByTutor(tutorId));
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<Post> getPostById(@PathVariable String postId) {
+        return ResponseEntity.ok(postService.getPostById(postId));
+    }
+
+    @PutMapping("/{postId}")
+    public ResponseEntity<Post> updatePost(
+            @PathVariable String postId,
+            @Valid @RequestBody UpdatePostRequest request) {
+        return ResponseEntity.ok(postService.updatePost(postId, request));
     }
 } 

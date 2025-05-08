@@ -41,4 +41,12 @@ public class AuthController {
             @Valid @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(userService.updateProfile(userDetails.getUsername(), request));
     }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<User> getUserById(@PathVariable String userId) {
+        User user = userService.getUserById(userId);
+        // Remove sensitive information
+        user.setPassword(null);
+        return ResponseEntity.ok(user);
+    }
 } 
