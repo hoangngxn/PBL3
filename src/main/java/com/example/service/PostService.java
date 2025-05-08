@@ -108,4 +108,47 @@ public class PostService {
         
         postRepository.save(post);
     }
+
+    public void deletePost(String postId) {
+        // First check if post exists
+        if (!postRepository.existsById(postId)) {
+            throw new RuntimeException("Post not found");
+        }
+        
+        postRepository.deleteById(postId);
+    }
+    
+    public Post adminUpdatePost(String postId, UpdatePostRequest request) {
+        // Admin can update any post without ownership check
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        
+        // Update fields if they are not null
+        if (request.getTitle() != null) {
+            post.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            post.setDescription(request.getDescription());
+        }
+        if (request.getSubject() != null) {
+            post.setSubject(request.getSubject());
+        }
+        if (request.getLocation() != null) {
+            post.setLocation(request.getLocation());
+        }
+        if (request.getSchedule() != null) {
+            post.setSchedule(request.getSchedule());
+        }
+        if (request.getGrade() != null) {
+            post.setGrade(request.getGrade());
+        }
+        if (request.getVisibility() != null) {
+            post.setVisibility(request.getVisibility());
+        }
+        if (request.getMaxStudent() != null) {
+            post.setMaxStudent(request.getMaxStudent());
+        }
+        
+        return postRepository.save(post);
+    }
 } 
