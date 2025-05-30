@@ -3,6 +3,9 @@ package com.example.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.List;
+import jakarta.validation.constraints.Future;
 
 @Data
 public class UpdatePostRequest {
@@ -16,7 +19,7 @@ public class UpdatePostRequest {
     
     private String location;
     
-    private String schedule;
+    private List<ScheduleDTO> schedules;
     
     private String grade;
     
@@ -24,4 +27,10 @@ public class UpdatePostRequest {
 
     @Min(value = 1, message = "Maximum students must be at least 1")
     private Integer maxStudent;
+
+    @Future(message = "Start time must be in the future")
+    private LocalDateTime startTime;
+
+    @Future(message = "End time must be in the future")
+    private LocalDateTime endTime;
 } 

@@ -14,7 +14,7 @@ public class Booking {
     private String tutorId;    // Reference to tutor's user ID
     private String postId;     // Reference to the post
     private String subject;
-    private String schedule;
+    private Schedule schedule;  // Single schedule assigned to this booking
     private BookingStatus status;
     private LocalDateTime createdAt;
 

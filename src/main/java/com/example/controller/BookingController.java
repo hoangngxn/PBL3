@@ -32,4 +32,10 @@ public class BookingController {
             @RequestParam Booking.BookingStatus status) {
         return ResponseEntity.ok(bookingService.updateBookingStatus(bookingId, status));
     }
+
+    @DeleteMapping("/{bookingId}")
+    public ResponseEntity<Void> deleteBooking(@PathVariable String bookingId) {
+        bookingService.deleteBooking(bookingId);
+        return ResponseEntity.ok().build();
+    }
 } 

@@ -4,6 +4,7 @@ import com.example.dto.CreatePostRequest;
 import com.example.dto.UpdatePostRequest;
 import com.example.model.Booking;
 import com.example.model.Post;
+import com.example.model.Schedule;
 import com.example.model.User;
 import com.example.repository.BookingRepository;
 import com.example.repository.PostRepository;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,10 +21,68 @@ public class PostService {
     private final UserService userService;
     private final BookingRepository bookingRepository;
 
+    private List<Schedule> convertScheduleDTOs(List<com.example.dto.ScheduleDTO> dtos) {
+        return dtos.stream()
+            .map(dto -> {
+                Schedule schedule = new Schedule();
+                schedule.setWeekday(dto.getWeekday());
+                schedule.setStartHour(dto.getStartHour());
+                schedule.setEndHour(dto.getEndHour());
+                
+                // Validate that end hour is after start hour
+                if (dto.getEndHour().isBefore(dto.getStartHour())) {
+                    throw new RuntimeException("End hour must be after start hour");
+                }
+                
+                return schedule;
+            })
+            .collect(Collectors.toList());
+    }
+
+    private boolean hasScheduleOverlap(List<Schedule> schedules, List<Post> existingPosts) {
+        // For each existing post
+        for (Post post : existingPosts) {
+            // Skip if the post is completed or cancelled
+            if (!post.isVisibility()) {
+                continue;
+            }
+            
+            // Check if the course periods overlap
+            if (post.getEndTime().isBefore(LocalDateTime.now())) {
+                continue; // Skip if the course has ended
+            }
+            
+            // For each schedule in the new post
+            for (Schedule newSchedule : schedules) {
+                // For each schedule in the existing post
+                for (Schedule existingSchedule : post.getSchedules()) {
+                    if (newSchedule.overlaps(existingSchedule)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public Post createPost(CreatePostRequest request) {
         User currentUser = userService.getCurrentUser();
         if (!"TUTOR".equals(currentUser.getRole())) {
             throw new RuntimeException("Only tutors can create posts");
+        }
+
+        // Validate that end time is after start time
+        if (request.getEndTime().isBefore(request.getStartTime())) {
+            throw new RuntimeException("End time must be after start time");
+        }
+
+        // Convert and validate schedules
+        List<Schedule> schedules = convertScheduleDTOs(request.getSchedules());
+
+        // Check for schedule overlaps with tutor's existing posts
+        List<Post> tutorPosts = postRepository.findByUserId(currentUser.getId());
+        if (hasScheduleOverlap(schedules, tutorPosts)) {
+            throw new RuntimeException("The schedule overlaps with your existing posts");
         }
 
         Post post = new Post();
@@ -31,12 +91,14 @@ public class PostService {
         post.setDescription(request.getDescription());
         post.setSubject(request.getSubject());
         post.setLocation(request.getLocation());
-        post.setSchedule(request.getSchedule());
+        post.setSchedules(schedules);
         post.setGrade(request.getGrade());
         post.setCreatedAt(LocalDateTime.now());
         post.setVisibility(request.getVisibility());
         post.setApprovedStudent(0); // Initialize with 0 approved students
         post.setMaxStudent(request.getMaxStudent());
+        post.setStartTime(request.getStartTime());
+        post.setEndTime(request.getEndTime());
 
         return postRepository.save(post);
     }
@@ -77,8 +139,17 @@ public class PostService {
         if (request.getLocation() != null) {
             post.setLocation(request.getLocation());
         }
-        if (request.getSchedule() != null) {
-            post.setSchedule(request.getSchedule());
+        if (request.getSchedules() != null) {
+            List<Schedule> schedules = convertScheduleDTOs(request.getSchedules());
+            
+            // Check for schedule overlaps with tutor's other posts
+            List<Post> tutorPosts = postRepository.findByUserId(currentUser.getId());
+            tutorPosts.remove(post); // Remove current post from the list
+            if (hasScheduleOverlap(schedules, tutorPosts)) {
+                throw new RuntimeException("The schedule overlaps with your existing posts");
+            }
+            
+            post.setSchedules(schedules);
         }
         if (request.getGrade() != null) {
             post.setGrade(request.getGrade());
@@ -88,6 +159,27 @@ public class PostService {
         }
         if (request.getMaxStudent() != null) {
             post.setMaxStudent(request.getMaxStudent());
+        }
+        if (request.getStartTime() != null) {
+            post.setStartTime(request.getStartTime());
+        }
+        if (request.getEndTime() != null) {
+            post.setEndTime(request.getEndTime());
+        }
+
+        // Validate that end time is after start time if both are being updated
+        if (request.getStartTime() != null && request.getEndTime() != null) {
+            if (request.getEndTime().isBefore(request.getStartTime())) {
+                throw new RuntimeException("End time must be after start time");
+            }
+        } else if (request.getStartTime() != null && post.getEndTime() != null) {
+            if (post.getEndTime().isBefore(request.getStartTime())) {
+                throw new RuntimeException("End time must be after start time");
+            }
+        } else if (request.getEndTime() != null && post.getStartTime() != null) {
+            if (request.getEndTime().isBefore(post.getStartTime())) {
+                throw new RuntimeException("End time must be after start time");
+            }
         }
 
         return postRepository.save(post);
@@ -136,8 +228,17 @@ public class PostService {
         if (request.getLocation() != null) {
             post.setLocation(request.getLocation());
         }
-        if (request.getSchedule() != null) {
-            post.setSchedule(request.getSchedule());
+        if (request.getSchedules() != null) {
+            List<Schedule> schedules = convertScheduleDTOs(request.getSchedules());
+            
+            // Check for schedule overlaps with tutor's other posts
+            List<Post> tutorPosts = postRepository.findByUserId(post.getUserId());
+            tutorPosts.remove(post); // Remove current post from the list
+            if (hasScheduleOverlap(schedules, tutorPosts)) {
+                throw new RuntimeException("The schedule overlaps with the tutor's existing posts");
+            }
+            
+            post.setSchedules(schedules);
         }
         if (request.getGrade() != null) {
             post.setGrade(request.getGrade());
@@ -147,6 +248,27 @@ public class PostService {
         }
         if (request.getMaxStudent() != null) {
             post.setMaxStudent(request.getMaxStudent());
+        }
+        if (request.getStartTime() != null) {
+            post.setStartTime(request.getStartTime());
+        }
+        if (request.getEndTime() != null) {
+            post.setEndTime(request.getEndTime());
+        }
+
+        // Validate that end time is after start time if both are being updated
+        if (request.getStartTime() != null && request.getEndTime() != null) {
+            if (request.getEndTime().isBefore(request.getStartTime())) {
+                throw new RuntimeException("End time must be after start time");
+            }
+        } else if (request.getStartTime() != null && post.getEndTime() != null) {
+            if (post.getEndTime().isBefore(request.getStartTime())) {
+                throw new RuntimeException("End time must be after start time");
+            }
+        } else if (request.getEndTime() != null && post.getStartTime() != null) {
+            if (request.getEndTime().isBefore(post.getStartTime())) {
+                throw new RuntimeException("End time must be after start time");
+            }
         }
         
         return postRepository.save(post);

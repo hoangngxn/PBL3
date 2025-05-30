@@ -38,7 +38,7 @@ public class BookingService {
         booking.setTutorId(post.getUserId());
         booking.setPostId(post.getId());
         booking.setSubject(post.getSubject());
-        booking.setSchedule(post.getSchedule());
+        booking.setSchedule(post.getSchedules().get(0));
         booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
 
@@ -97,5 +97,32 @@ public class BookingService {
         
         // Return bookings where the user is either a student or tutor
         return bookingRepository.findByStudentIdOrTutorId(userId, userId);
+    }
+
+    public void deleteBooking(String bookingId) {
+        User currentUser = userService.getCurrentUser();
+        log.info("Deleting booking: {} by student: {}", bookingId, currentUser.getId());
+        
+        // Verify the user is a student
+        if (!"STUDENT".equals(currentUser.getRole())) {
+            throw new RuntimeException("Only students can delete bookings");
+        }
+
+        // Find the booking
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        // Verify the student is the owner of the booking
+        if (!booking.getStudentId().equals(currentUser.getId())) {
+            throw new RuntimeException("You can only delete your own bookings");
+        }
+
+        // Verify the booking is in PENDING status
+        if (booking.getStatus() != Booking.BookingStatus.PENDING) {
+            throw new RuntimeException("Only pending bookings can be deleted");
+        }
+
+        // Delete the booking
+        bookingRepository.deleteById(bookingId);
     }
 } 
