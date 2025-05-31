@@ -1,8 +1,11 @@
 package com.example.service;
 
 import com.example.dto.CreateBookingRequest;
+import com.example.exception.BookingException;
+import com.example.exception.BookingException.ErrorCode;
 import com.example.model.Booking;
 import com.example.model.Post;
+import com.example.model.Schedule;
 import com.example.model.User;
 import com.example.repository.BookingRepository;
 import com.example.repository.PostRepository;
@@ -22,23 +25,66 @@ public class BookingService {
     private final UserService userService;
     private final PostService postService;
 
+    private boolean hasScheduleOverlap(Schedule newSchedule, List<Booking> existingBookings) {
+        // Only check active bookings (PENDING or CONFIRMED)
+        return existingBookings.stream()
+            .filter(booking -> 
+                booking.getStatus() == Booking.BookingStatus.PENDING || 
+                booking.getStatus() == Booking.BookingStatus.CONFIRMED)
+            .anyMatch(booking -> {
+                // Get the post to check its time period
+                Post post = postRepository.findById(booking.getPostId())
+                        .orElse(null);
+                
+                if (post == null || post.getEndTime().isBefore(LocalDateTime.now())) {
+                    return false; // Skip if post not found or has ended
+                }
+                
+                return booking.getSchedule().overlaps(newSchedule);
+            });
+    }
+
     public Booking createBooking(CreateBookingRequest request) {
         User currentUser = userService.getCurrentUser();
         log.info("Creating booking for student: {}", currentUser.getId());
         
         if (!"STUDENT".equals(currentUser.getRole())) {
-            throw new RuntimeException("Only students can create bookings");
+            throw new BookingException(ErrorCode.NOT_STUDENT);
         }
 
         Post post = postRepository.findById(request.getPostId())
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new BookingException(ErrorCode.POST_NOT_FOUND));
+
+        // Validate that the post is still active and visible
+        if (!post.isVisibility()) {
+            throw new BookingException(ErrorCode.POST_NOT_AVAILABLE);
+        }
+
+        // Validate that the post hasn't reached its maximum students
+        if (post.getApprovedStudent() >= post.getMaxStudent()) {
+            throw new BookingException(ErrorCode.POST_FULL);
+        }
+
+        // Validate that the post hasn't ended
+        if (post.getEndTime().isBefore(LocalDateTime.now())) {
+            throw new BookingException(ErrorCode.POST_ENDED);
+        }
+
+        // Get student's existing bookings
+        List<Booking> studentBookings = bookingRepository.findByStudentId(currentUser.getId());
+
+        // Check for schedule overlaps with existing bookings
+        Schedule selectedSchedule = post.getSchedules().get(0);
+        if (hasScheduleOverlap(selectedSchedule, studentBookings)) {
+            throw new BookingException(ErrorCode.SCHEDULE_OVERLAP);
+        }
 
         Booking booking = new Booking();
         booking.setStudentId(currentUser.getId());
         booking.setTutorId(post.getUserId());
         booking.setPostId(post.getId());
         booking.setSubject(post.getSubject());
-        booking.setSchedule(post.getSchedules().get(0));
+        booking.setSchedule(selectedSchedule);
         booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
 
@@ -65,10 +111,10 @@ public class BookingService {
         log.info("Updating booking status: {} for tutor: {}", bookingId, currentUser.getId());
         
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new BookingException(ErrorCode.BOOKING_NOT_FOUND));
 
         if (!"TUTOR".equals(currentUser.getRole()) || !booking.getTutorId().equals(currentUser.getId())) {
-            throw new RuntimeException("Only the tutor of this booking can update its status");
+            throw new BookingException(ErrorCode.NOT_TUTOR);
         }
 
         // Get the old status before updating
@@ -105,21 +151,21 @@ public class BookingService {
         
         // Verify the user is a student
         if (!"STUDENT".equals(currentUser.getRole())) {
-            throw new RuntimeException("Only students can delete bookings");
+            throw new BookingException(ErrorCode.NOT_STUDENT);
         }
 
         // Find the booking
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new BookingException(ErrorCode.BOOKING_NOT_FOUND));
 
         // Verify the student is the owner of the booking
         if (!booking.getStudentId().equals(currentUser.getId())) {
-            throw new RuntimeException("You can only delete your own bookings");
+            throw new BookingException(ErrorCode.NOT_BOOKING_OWNER);
         }
 
         // Verify the booking is in PENDING status
         if (booking.getStatus() != Booking.BookingStatus.PENDING) {
-            throw new RuntimeException("Only pending bookings can be deleted");
+            throw new BookingException(ErrorCode.NOT_PENDING_STATUS);
         }
 
         // Delete the booking

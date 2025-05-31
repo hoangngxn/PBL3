@@ -20,4 +20,4 @@ public class Schedule {
                 this.endHour.equals(other.startHour) ||  // Allow back-to-back schedules
                 this.startHour.equals(other.endHour));   // Allow back-to-back schedules
     }
-} 
+}
