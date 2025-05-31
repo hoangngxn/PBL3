@@ -40,16 +40,25 @@ public class PostService {
     }
 
     private boolean hasScheduleOverlap(List<Schedule> schedules, List<Post> existingPosts) {
+        // First check for overlaps within the same schedules list
+        for (int i = 0; i < schedules.size(); i++) {
+            for (int j = i + 1; j < schedules.size(); j++) {
+                if (schedules.get(i).overlaps(schedules.get(j))) {
+                    return true;
+                }
+            }
+        }
+
         // For each existing post
         for (Post post : existingPosts) {
-            // Skip if the post is completed or cancelled
+            // Skip if the post is not visible (completed or cancelled)
             if (!post.isVisibility()) {
                 continue;
             }
             
-            // Check if the course periods overlap
+            // Skip if the course has ended
             if (post.getEndTime().isBefore(LocalDateTime.now())) {
-                continue; // Skip if the course has ended
+                continue;
             }
             
             // For each schedule in the new post
@@ -76,13 +85,18 @@ public class PostService {
             throw new RuntimeException("End time must be after start time");
         }
 
+        // Validate that start time is in the future
+        if (request.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Start time must be in the future");
+        }
+
         // Convert and validate schedules
         List<Schedule> schedules = convertScheduleDTOs(request.getSchedules());
 
         // Check for schedule overlaps with tutor's existing posts
         List<Post> tutorPosts = postRepository.findByUserId(currentUser.getId());
         if (hasScheduleOverlap(schedules, tutorPosts)) {
-            throw new RuntimeException("The schedule overlaps with your existing posts");
+            throw new RuntimeException("The schedule overlaps with your existing posts or has conflicting schedules within itself");
         }
 
         Post post = new Post();

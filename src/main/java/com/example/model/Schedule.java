@@ -16,6 +16,8 @@ public class Schedule {
         }
         
         return !(this.endHour.isBefore(other.startHour) || 
-                this.startHour.isAfter(other.endHour));
+                this.startHour.isAfter(other.endHour) ||
+                this.endHour.equals(other.startHour) ||  // Allow back-to-back schedules
+                this.startHour.equals(other.endHour));   // Allow back-to-back schedules
     }
 } 
