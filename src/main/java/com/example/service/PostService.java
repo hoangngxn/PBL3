@@ -39,12 +39,14 @@ public class PostService {
             .collect(Collectors.toList());
     }
 
-    private boolean hasScheduleOverlap(List<Schedule> schedules, List<Post> existingPosts) {
+    private boolean hasScheduleOverlap(List<Schedule> schedules, List<Post> existingPosts, boolean checkInternalOverlaps) {
         // First check for overlaps within the same schedules list
-        for (int i = 0; i < schedules.size(); i++) {
-            for (int j = i + 1; j < schedules.size(); j++) {
-                if (schedules.get(i).overlaps(schedules.get(j))) {
-                    return true;
+        if (checkInternalOverlaps) {
+            for (int i = 0; i < schedules.size(); i++) {
+                for (int j = i + 1; j < schedules.size(); j++) {
+                    if (schedules.get(i).overlaps(schedules.get(j))) {
+                        return true;
+                    }
                 }
             }
         }
@@ -95,7 +97,7 @@ public class PostService {
 
         // Check for schedule overlaps with tutor's existing posts
         List<Post> tutorPosts = postRepository.findByUserId(currentUser.getId());
-        if (hasScheduleOverlap(schedules, tutorPosts)) {
+        if (hasScheduleOverlap(schedules, tutorPosts, true)) {
             throw new RuntimeException("The schedule overlaps with your existing posts or has conflicting schedules within itself");
         }
 
@@ -159,7 +161,7 @@ public class PostService {
             // Check for schedule overlaps with tutor's other posts
             List<Post> tutorPosts = postRepository.findByUserId(currentUser.getId());
             tutorPosts.remove(post); // Remove current post from the list
-            if (hasScheduleOverlap(schedules, tutorPosts)) {
+            if (hasScheduleOverlap(schedules, tutorPosts, false)) {
                 throw new RuntimeException("The schedule overlaps with your existing posts");
             }
             
@@ -248,7 +250,7 @@ public class PostService {
             // Check for schedule overlaps with tutor's other posts
             List<Post> tutorPosts = postRepository.findByUserId(post.getUserId());
             tutorPosts.remove(post); // Remove current post from the list
-            if (hasScheduleOverlap(schedules, tutorPosts)) {
+            if (hasScheduleOverlap(schedules, tutorPosts, false)) {
                 throw new RuntimeException("The schedule overlaps with the tutor's existing posts");
             }
             

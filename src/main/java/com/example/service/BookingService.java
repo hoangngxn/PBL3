@@ -25,7 +25,7 @@ public class BookingService {
     private final UserService userService;
     private final PostService postService;
 
-    private boolean hasScheduleOverlap(Schedule newSchedule, List<Booking> existingBookings) {
+    private boolean hasScheduleOverlap(List<Schedule> newSchedules, List<Booking> existingBookings) {
         // Only check active bookings (PENDING or CONFIRMED)
         return existingBookings.stream()
             .filter(booking -> 
@@ -40,7 +40,15 @@ public class BookingService {
                     return false; // Skip if post not found or has ended
                 }
                 
-                return booking.getSchedule().overlaps(newSchedule);
+                // Check if any of the new schedules overlap with any of the existing schedules
+                for (Schedule newSchedule : newSchedules) {
+                    for (Schedule existingSchedule : booking.getSchedules()) {
+                        if (newSchedule.overlaps(existingSchedule)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             });
     }
 
@@ -74,8 +82,7 @@ public class BookingService {
         List<Booking> studentBookings = bookingRepository.findByStudentId(currentUser.getId());
 
         // Check for schedule overlaps with existing bookings
-        Schedule selectedSchedule = post.getSchedules().get(0);
-        if (hasScheduleOverlap(selectedSchedule, studentBookings)) {
+        if (hasScheduleOverlap(post.getSchedules(), studentBookings)) {
             throw new BookingException(ErrorCode.SCHEDULE_OVERLAP);
         }
 
@@ -84,7 +91,7 @@ public class BookingService {
         booking.setTutorId(post.getUserId());
         booking.setPostId(post.getId());
         booking.setSubject(post.getSubject());
-        booking.setSchedule(selectedSchedule);
+        booking.setSchedules(post.getSchedules()); // Set all schedules from the post
         booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
 
